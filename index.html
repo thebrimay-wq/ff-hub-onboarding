@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Finesse — Onboarding Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── FF Design System ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #EBEEF4;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      background: #063853;
+      color: white;
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .top-bar-title { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+    .top-bar-meta  { font-size: 12px; opacity: .6; }
+
+    /* ── Page layout ── */
+    .page { max-width: 980px; margin: 0 auto; padding: 36px 24px 60px; }
+
+    /* ── Intro card ── */
+    .intro-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px 28px;
+      border-left: 5px solid #1284AF;
+      box-shadow: 0 2px 12px rgba(6,56,83,.08);
+      margin-bottom: 28px;
+    }
+    .intro-card h2 { font-size: 17px; color: #063853; margin-bottom: 8px; }
+    .intro-card p  { font-size: 13px; color: #928B9F; line-height: 1.65; }
+
+    /* ── Principle chips ── */
+    .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
+    .chip {
+      background: #F4F7FE; color: #005291;
+      font-size: 12px; font-weight: 600;
+      padding: 8px 16px; border-radius: 20px;
+      border: 1px solid #EBEEF4;
+    }
+
+    /* ── Screen nav dots ── */
+    .dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 5px;
+      background: #EBEEF4; cursor: pointer;
+      transition: all .2s;
+    }
+    .dot.active { width: 28px; background: #005291; }
+
+    /* ── Screen card ── */
+    .phone-wrap { display: flex; justify-content: center; align-items: flex-start; gap: 0; position: relative; }
+    .phone-screen {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      height: 790px;
+      width: 390px;
+      position: relative;
+      box-shadow: 0 8px 40px rgba(6,56,83,.14), 0 2px 8px rgba(6,56,83,.06);
+    }
+
+    /* ── Restart button ── */
+    .restart-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid #EBEEF4;
+      color: #928B9F; font-size: 12px; font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      padding: 7px 16px; border-radius: 999px;
+      cursor: pointer; transition: all .2s;
+    }
+    .restart-btn:hover { border-color: #1284AF; color: #1284AF; }
+
+    /* ── Screens ── */
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+      opacity: 0; pointer-events: none;
+    }
+    .screen.active {
+      opacity: 1; pointer-events: all;
+    }
+
+    /* ── Directional slide transitions ── */
+    @keyframes slideInFromRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes slideInFromLeft {
+      from { transform: translateX(-100%); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+    @keyframes slideOutToLeft {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(-100%); opacity: 0; }
+    }
+    @keyframes slideOutToRight {
+      from { transform: translateX(0);   opacity: 1; }
+      to   { transform: translateX(100%); opacity: 0; }
+    }
+    .screen.slide-in-right  { animation: slideInFromRight .32s cubic-bezier(.4,0,.2,1) forwards; }
+    .screen.slide-in-left   { animation: slideInFromLeft  .32s cubic-bezier(.4,0,.2,1) forwards; }
+    .screen.slide-out-left  { animation: slideOutToLeft   .32s cubic-bezier(.4,0,.2,1) forwards; }
+    .screen.slide-out-right { animation: slideOutToRight  .32s cubic-bezier(.4,0,.2,1) forwards; }
+
+    /* ── Progress pill dots ── */
+    .prog-dots {
+      display: flex; gap: 8px; justify-content: center;
+      padding: 16px 22px 6px;
+    }
+    .prog-dot {
+      height: 6px; width: 14px; border-radius: 3px;
+      background: #EBEEF4; transition: all .35s;
+    }
+    .prog-dot.active { width: 40px; background: #00507C; }
+
+    /* ── Screen header ── */
+    .scr-header {
+      padding: 12px 22px 10px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: #F4F7FE; border: none; cursor: pointer;
+      font-size: 15px; color: #383838;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-lbl { font-size: 12px; color: #928B9F; font-weight: 500; }
+
+    /* ── S1 Welcome ── */
+    .s1 {
+      background: white;
+      padding: 40px 28px 36px;
+      text-align: center;
+      justify-content: space-between;
+    }
+    .s1-logo { display: flex; justify-content: center; margin: 0 auto 28px; }
+    .s1-brand { display: none; }
+    .s1-h1 { font-size: 30px; font-weight: 800; color: #383838; line-height: 1.2; margin-bottom: 14px; }
+    .s1-sub { font-size: 14px; color: #928B9F; line-height: 1.6; margin-bottom: 28px; }
+    .s1-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 36px; }
+    .s1-pill {
+      background: #F4F7FE; border: 1px solid #EBEEF4;
+      color: #383838; font-size: 12px; padding: 6px 14px; border-radius: 20px; font-weight: 500;
+    }
+    .btn-white {
+      width: 100%; background: #063853; color: white;
+      border: none; padding: 17px 24px; border-radius: 999px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-white:hover { opacity: .88; }
+    .time-note { font-size: 12px; color: #928B9F; margin-top: 12px; }
+
+    /* ── S2 Goals ── */
+    .s2-body { padding: 0 22px 28px; overflow-y: auto; }
+    .scr-title { font-size: 20px; font-weight: 700; color: #383838; line-height: 1.3; margin-bottom: 6px; }
+    .scr-sub { font-size: 13px; color: #928B9F; margin-bottom: 20px; line-height: 1.5; }
+    .goals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .goal-tile {
+      background: #F4F7FE; border-radius: 12px; padding: 20px 12px;
+      cursor: pointer; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      transition: all .2s;
+      box-shadow: 0 1px 4px rgba(6,56,83,.06);
+    }
+    .goal-tile:hover { background: #EBEEF4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(6,56,83,.12); }
+    .goal-tile.sel { background: #00507C; box-shadow: 0 4px 16px rgba(0,80,124,.25); }
+    .goal-tile.sel .goal-lbl { color: white; }
+    .goal-icon { font-size: 28px; }
+    .goal-lbl { font-size: 12px; font-weight: 600; color: #383838; line-height: 1.3; }
+
+    /* ── S3 Questions ── */
+    .s3-body { padding: 0 22px 28px; }
+    .q-block { margin-bottom: 24px; }
+    .q-lbl { font-size: 14px; font-weight: 700; color: #383838; margin-bottom: 11px; }
+    .a-tiles { display: flex; flex-direction: column; gap: 8px; }
+    .a-tile {
+      background: #F4F7FE; border-radius: 10px; padding: 13px 16px;
+      cursor: pointer; display: flex; align-items: center; gap: 11px;
+      font-size: 13px; font-weight: 500; color: #383838;
+      transition: all .15s;
+      box-shadow: 0 1px 3px rgba(6,56,83,.05);
+    }
+    .a-tile:hover { background: #EBEEF4; }
+    .a-tile.sel { background: #00507C; color: white; }
+    .a-icon { font-size: 18px; }
+
+    /* ── Buttons ── */
+    .btn-blue {
+      width: 100%; background: #063853;
+      color: white; border: none; padding: 17px 24px;
+      border-radius: 999px; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 6px;
+      transition: opacity .15s;
+    }
+    .btn-blue:hover { opacity: .88; }
+
+    /* ── S4 Match ── */
+    .match-hero {
+      background: #F4F7FE;
+      padding: 28px 24px 24px; text-align: center;
+      border-bottom: 1px solid #EBEEF4;
+    }
+    .match-type-label {
+      display: inline-block;
+      background: white; color: #1284AF;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: .6px;
+      margin-bottom: 14px; border: 1px solid #EBEEF4;
+    }
+    .match-avatar {
+      width: 68px; height: 68px;
+      background: white; border-radius: 50%;
+      margin: 0 auto 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 2px 12px rgba(6,56,83,.12);
+    }
+    .match-name  { font-size: 22px; font-weight: 800; color: #063853; margin-bottom: 8px; }
+    .match-desc  { font-size: 13px; color: #928B9F; line-height: 1.6; }
+    .match-body  { padding: 22px; }
+    .match-sec-title { font-size: 11px; font-weight: 700; color: #928B9F; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .6px; }
+    .sec-card {
+      background: white; border: 1px solid #EBEEF4;
+      border-radius: 12px; padding: 14px;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 1px 4px rgba(6,56,83,.05);
+    }
+    .sec-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .sec-name { font-size: 13px; font-weight: 600; color: #383838; margin-bottom: 2px; }
+    .sec-cnt  { font-size: 11px; color: #928B9F; }
+    .badge-high {
+      margin-left: auto; flex-shrink: 0;
+      background: #EBEEF4; color: #1284AF;
+      font-size: 10px; font-weight: 700;
+      padding: 4px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: .3px;
+    }
+
+    /* ── S5 Hub ── */
+    .hub { background: #F4F7FE; overflow-y: auto; }
+    .hub-header {
+      background: white;
+      padding: 24px 22px 20px;
+      border-bottom: 1px solid #EBEEF4;
+    }
+    .hub-greet   { font-size: 18px; font-weight: 800; color: #383838; margin-bottom: 3px; }
+    .hub-tag     { font-size: 12px; color: #928B9F; margin-bottom: 16px; }
+    .hub-chips   { display: flex; gap: 8px; }
+    .hub-chip {
+      background: #F4F7FE; border: 1px solid #EBEEF4;
+      color: #383838; font-size: 12px; font-weight: 500;
+      padding: 7px 13px; border-radius: 20px; cursor: pointer;
+      white-space: nowrap;
+    }
+    .hub-chip:hover { background: #EBEEF4; }
+    .hub-body { padding: 18px 16px; }
+    .hub-sec-title { font-size: 14px; font-weight: 700; color: #383838; margin-bottom: 11px; }
+    .aimee-card {
+      background: #063853;
+      border-radius: 12px; padding: 16px;
+      margin-bottom: 18px; display: flex; gap: 12px; align-items: center;
+    }
+    .aimee-av {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .aimee-name { font-size: 12px; font-weight: 700; color: white; margin-bottom: 4px; }
+    .aimee-msg  { font-size: 12px; color: rgba(255,255,255,.82); line-height: 1.5; }
+    .hub-card {
+      background: white; border-radius: 12px; padding: 15px;
+      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(6,56,83,.07);
+    }
+    .hub-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+    .hub-card-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px;
+    }
+    .hub-card-name { font-size: 13px; font-weight: 700; color: #383838; }
+    .hub-card-sub  { font-size: 11px; color: #928B9F; }
+    .c-items { display: flex; flex-direction: column; gap: 7px; }
+    .c-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 10px; background: #F4F7FE; border-radius: 8px;
+    }
+    .c-badge {
+      font-size: 10px; font-weight: 600; padding: 3px 7px;
+      border-radius: 5px; text-transform: uppercase; flex-shrink: 0; letter-spacing: .3px;
+    }
+    .c-article    { background: #EBEEF4; color: #005291; }
+    .c-calculator { background: #EBEEF4; color: #063853; }
+    .c-video      { background: #EBEEF4; color: #00507C; }
+    .c-tip        { background: #EBEEF4; color: #1284AF; }
+    .c-title { font-size: 12px; color: #383838; font-weight: 500; }
+
+    /* ── Screen label below phone ── */
+    .scr-label {
+      text-align: center; margin-top: 16px;
+      font-size: 13px; color: #928B9F; font-weight: 500;
+    }
+    .scr-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #063853; color: white;
+      width: 22px; height: 22px; border-radius: 50%;
+      font-size: 11px; font-weight: 700; margin-right: 6px;
+    }
+
+    /* ── Annotation callouts ── */
+    .ann-wrap { position: absolute; right: -218px; }
+    .ann {
+      background: white; border: 2px solid #1284AF;
+      border-radius: 12px; padding: 10px 13px;
+      width: 200px; font-size: 11px; color: #383838;
+      box-shadow: 0 4px 16px rgba(6,56,83,.10);
+      margin-bottom: 12px; position: relative;
+    }
+    .ann::before {
+      content: ''; position: absolute;
+      left: -10px; top: 14px;
+      border: 6px solid transparent;
+      border-right-color: #1284AF;
+    }
+    .ann strong { display: block; font-size: 11px; color: #1284AF; margin-bottom: 3px; }
+
+    /* ── Mapping table ── */
+    .map-table-wrap {
+      background: white; border-radius: 12px; padding: 24px;
+      margin-top: 28px; box-shadow: 0 2px 12px rgba(6,56,83,.06);
+    }
+    .map-title { font-size: 15px; font-weight: 700; color: #383838; margin-bottom: 6px; }
+    .map-sub   { font-size: 12px; color: #928B9F; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; background: #F4F7FE; color: #383838; font-weight: 700; }
+    td { padding: 10px 12px; border-top: 1px solid #EBEEF4; color: #383838; vertical-align: top; }
+    td:first-child { font-weight: 600; color: #063853; }
+
+    @media (max-width: 720px) {
+      .ann-wrap { display: none; }
+      .phone-screen { width: 355px; }
+    }
+    @media (max-width: 420px) {
+      .phone-screen { width: 100%; border-radius: 0; height: 750px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-title">Financial Hub — Onboarding Flow Mockup</div>
+  <div class="top-bar-meta">Interactive Prototype · March 2026</div>
+</div>
+
+<div class="page">
+
+  <!-- Intro card -->
+  <div class="intro-card">
+    <h2>Onboarding Flow: Zero to Wow in Under 60 Seconds</h2>
+    <p>This mockup synthesizes the <strong>Core Principles deck</strong> (goal-first flow, progressive disclosure, one action per screen), the <strong>Personalization System</strong> (14 matched profiles, 19 curated content sections), and the <strong>Engagement Strategy doc</strong> (emotional mirror, "Meet Aimee" introduction, wow moment within the first minute). <strong>Click any goal tile or use the dots below to navigate all 5 screens.</strong></p>
+  </div>
+
+  <!-- Principle chips -->
+  <div class="chips">
+    <div class="chip">⚡ Quick Time to Value</div>
+    <div class="chip">🧘 3 Questions Max</div>
+    <div class="chip">🎯 One Action Per Screen</div>
+    <div class="chip">📱 Mobile-First (80% of visits)</div>
+    <div class="chip">💜 Emotional Design</div>
+    <div class="chip">🤖 Aimee AI Coach</div>
+  </div>
+
+  <!-- Nav dots + restart -->
+  <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:20px;">
+    <div class="dots" id="dots" style="margin-bottom:0;">
+      <div class="dot active" onclick="goTo(0)"></div>
+      <div class="dot" onclick="goTo(1)"></div>
+      <div class="dot" onclick="goTo(2)"></div>
+      <div class="dot" onclick="goTo(3)"></div>
+      <div class="dot" onclick="goTo(4)"></div>
+    </div>
+    <button class="restart-btn" onclick="goTo(0)">↺ Start over</button>
+  </div>
+
+  <!-- Screen card -->
+  <div class="phone-wrap">
+      <div class="phone-screen">
+
+        <!-- ── S1: Welcome ── -->
+        <div class="screen s1 active" id="s0">
+          <div>
+            <div class="s1-logo">
+              <svg width="160" height="38" viewBox="148 76 101 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="ff-lg-r1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160.562 88.4993) scale(10.9143 11.0422)">
+                    <stop offset="0.33" stop-color="#1284AF"/>
+                    <stop offset="0.39" stop-color="#1A88B2"/>
+                    <stop offset="0.48" stop-color="#3094B9"/>
+                    <stop offset="0.6" stop-color="#54A6C5"/>
+                    <stop offset="0.73" stop-color="#85C0D6"/>
+                    <stop offset="0.87" stop-color="#C4E1EB"/>
+                    <stop offset="0.99" stop-color="white"/>
+                  </radialGradient>
+                  <radialGradient id="ff-lg-r2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160.562 88.4993) scale(10.9143 11.0422)">
+                    <stop offset="0.21" stop-color="#1284AF"/>
+                    <stop offset="0.93" stop-color="#005291"/>
+                  </radialGradient>
+                </defs>
+                <path d="M239.276 86.903H231.294V97.8199H239.352V96.1051H233.185V93.1724H238.584V91.4576H233.185V88.6179H239.276V86.903Z" fill="#1284AF"/>
+                <path d="M223.49 89.7575C223.49 89.0247 224.137 88.4468 225.248 88.4468C226.234 88.4468 227.205 88.8375 228.177 89.5703L229.196 88.1194C228.094 87.2047 226.706 86.7179 225.281 86.7467C223.139 86.7467 221.598 88.0265 221.598 89.9286C221.598 91.956 222.892 92.6417 225.193 93.2034C227.19 93.6709 227.627 94.0925 227.627 94.8873C227.627 95.7292 226.888 96.2748 225.716 96.2748C224.376 96.2748 223.344 95.7616 222.31 94.8563L221.171 96.229C222.401 97.3623 224.007 97.9873 225.671 97.9802C227.935 97.9802 229.522 96.7678 229.522 94.7054C229.522 92.8815 228.335 92.0543 226.06 91.4926C223.995 90.9942 223.501 90.6197 223.501 89.7629" fill="#1284AF"/>
+                <path d="M214.094 89.7575C214.094 89.0247 214.741 88.4468 215.85 88.4468C216.837 88.4468 217.807 88.8375 218.779 89.5703L219.801 88.1194C218.699 87.2042 217.311 86.7174 215.886 86.7467C213.745 86.7467 212.204 88.0265 212.204 89.9286C212.204 91.956 213.497 92.6417 215.799 93.2034C217.797 93.6709 218.235 94.0925 218.235 94.8873C218.235 95.7292 217.494 96.2748 216.324 96.2748C214.982 96.2748 213.95 95.7616 212.917 94.8563L211.778 96.229C213.008 97.3621 214.614 97.9871 216.277 97.9802C218.541 97.9802 220.129 96.7679 220.129 94.7054C220.129 92.8815 218.943 92.0543 216.668 91.4926C214.602 90.9942 214.11 90.6197 214.11 89.7629M210.359 86.903H202.358V97.8146H210.433V96.1051H204.257V93.1724H209.665V91.4576H204.257V88.6179H210.359V86.903ZM198.426 94.4468L192.647 86.903H190.891V97.8146H192.755V90.0525L198.704 97.8199H200.291V86.9084H198.427L198.426 94.4468ZM186.871 97.8146H188.767V86.903H186.871V97.8146ZM184.782 86.903H176.748V97.8146H178.643V93.3691H184.084V91.6179H178.643V88.6502H184.782V86.903Z" fill="#1284AF"/>
+                <path d="M221.502 84.8797H225.45V83.969H222.492V79.1855H221.502V84.8797ZM218.122 82.6192H216.184L217.148 80.3399L218.122 82.6192ZM217.624 79.1437H216.706L214.23 84.8797H215.243L215.822 83.5043H218.485L219.056 84.8797H220.101L217.624 79.1437ZM211.829 84.8797H212.818V79.1855H211.829V84.8797ZM210.467 83.969L209.832 83.3184C209.348 83.7737 208.906 84.0579 208.215 84.0579C207.138 84.0579 206.358 83.1459 206.358 82.0251C206.358 80.9044 207.138 80.0045 208.215 80.0045C208.86 80.0045 209.34 80.2887 209.792 80.7117L210.427 79.9708C210.141 79.6763 209.797 79.4454 209.417 79.2927C209.038 79.1401 208.631 79.0692 208.223 79.0844C206.519 79.0844 205.32 80.4113 205.32 82.0373C205.32 83.6632 206.543 84.9753 208.183 84.9753C209.236 84.9753 209.881 84.5846 210.467 83.9663M195.534 82.6192H193.597L194.562 80.3399L195.534 82.6192ZM195.035 79.1437H194.119L191.642 84.8797H192.655L193.234 83.5043H195.897L196.469 84.8797H197.514L195.035 79.1437ZM189.227 83.123L186.211 79.1855H185.295V84.8797H186.268V80.8276L189.372 84.8797H190.2V79.1855H189.227V83.123ZM182.625 84.8743H183.614V79.1855H182.625V84.8743ZM180.937 79.1855H176.748V84.8797H177.737V82.5613H180.576V81.6507H177.737V80.0961H180.933L180.937 79.1855Z" fill="#005291"/>
+                <path d="M202.888 83.123L199.872 79.1855H198.955V84.8797H199.928V80.8276L203.032 84.8797H203.861V79.1855H202.888V83.123Z" fill="#005291"/>
+                <path d="M159.324 87.7086C157.06 93.7867 151.601 94.7135 150.863 94.9964C150.501 95.1311 150.686 95.2658 150.863 95.2429C151.13 95.216 151.448 95.1998 151.557 95.1944C151.889 95.1783 151.941 95.1742 152.15 95.4288C152.359 95.6834 153.215 96.6062 153.215 96.6062C158.18 95.2227 159.862 90.6709 160.804 87.6587L159.324 87.7086ZM168.868 81.4661C167.446 82.0319 163.792 83.6632 162.406 86.9488C163.996 86.9259 165.639 87 166.184 87.0067C167.06 87.0189 167.337 87.4216 166.081 87.4365C164.73 87.5361 162.22 87.6385 162.22 87.6385C161.678 89.0651 159.895 95.7467 153.203 96.9457C152.451 97.0804 152.851 97.2744 153.164 97.2744C153.331 97.2744 153.524 97.2636 153.667 97.2528C153.814 97.2511 153.956 97.3038 154.067 97.401C154.694 97.9223 156.863 99.4971 160.333 99.5388C165.299 99.6156 168.355 96.198 168.828 95.6659C170.485 93.7288 171.419 91.2655 171.467 88.7041C171.528 84.8339 169.47 82.1962 169.359 82.0184C169.249 81.8406 169.093 81.6951 169.359 81.5819C169.523 81.5146 169.586 81.427 169.431 81.388C169.24 81.374 169.048 81.4007 168.868 81.4661ZM166.385 79.1572C161.184 81.062 159.931 85.9587 159.567 86.9892C159.958 86.9636 160.563 86.9623 160.995 86.9555C161.695 85.6004 162.992 82.4495 168.602 81.1347C168.335 80.7804 167.217 79.8415 167.086 79.7405C166.956 79.6394 166.732 79.4091 167.106 79.2582C167.403 79.1383 167.222 79.0346 167.038 79.0359C166.816 79.0429 166.595 79.0838 166.385 79.1572ZM160.526 77.4571H160.214C156.528 77.5595 153.994 79.2339 152.007 81.5375C150.021 83.841 149.733 86.8828 149.68 87.6911C149.501 90.0696 150.091 92.4424 151.361 94.4522C156.639 92.1944 157.902 87.9713 158.123 87.3125C157.563 87.3233 156.319 87.4472 156.007 87.4607C155.805 87.4715 155.261 87.5321 154.982 87.326C154.616 87.0566 155.115 86.9731 155.662 86.8586C155.987 86.7912 158.458 86.5447 158.458 86.5447C158.685 85.824 159.952 80.3372 165.933 78.9255C165.933 78.9255 164.036 77.4679 160.587 77.4571H160.526Z" fill="url(#ff-lg-r1)"/>
+                <path d="M159.324 87.7086C157.06 93.7867 151.601 94.7135 150.863 94.9964C150.501 95.1311 150.686 95.2658 150.863 95.2429C151.13 95.216 151.448 95.1998 151.557 95.1944C151.889 95.1783 151.941 95.1742 152.15 95.4288C152.359 95.6834 153.215 96.6062 153.215 96.6062C158.18 95.2227 159.862 90.6709 160.804 87.6587L159.324 87.7086ZM168.868 81.4661C167.446 82.0319 163.792 83.6632 162.406 86.9488C163.996 86.9259 165.639 87 166.184 87.0067C167.06 87.0189 167.337 87.4216 166.081 87.4365C164.73 87.5361 162.22 87.6385 162.22 87.6385C161.678 89.0651 159.895 95.7467 153.203 96.9457C152.451 97.0804 152.851 97.2744 153.164 97.2744C153.331 97.2744 153.524 97.2636 153.667 97.2528C153.814 97.2511 153.956 97.3038 154.067 97.401C154.694 97.9223 156.863 99.4971 160.333 99.5388C165.299 99.6156 168.355 96.198 168.828 95.6659C170.485 93.7288 171.419 91.2655 171.467 88.7041C171.528 84.8339 169.47 82.1962 169.359 82.0184C169.249 81.8406 169.093 81.6951 169.359 81.5819C169.523 81.5146 169.586 81.427 169.431 81.388C169.24 81.374 169.048 81.4007 168.868 81.4661ZM166.385 79.1572C161.184 81.062 159.931 85.9587 159.567 86.9892C159.958 86.9636 160.563 86.9623 160.995 86.9555C161.695 85.6004 162.992 82.4495 168.602 81.1347C168.335 80.7804 167.217 79.8415 167.086 79.7405C166.956 79.6394 166.732 79.4091 167.106 79.2582C167.403 79.1383 167.222 79.0346 167.038 79.0359C166.816 79.0429 166.595 79.0838 166.385 79.1572ZM160.526 77.4571H160.214C156.528 77.5595 153.994 79.2339 152.007 81.5375C150.021 83.841 149.733 86.8828 149.68 87.6911C149.501 90.0696 150.091 92.4424 151.361 94.4522C156.639 92.1944 157.902 87.9713 158.123 87.3125C157.563 87.3233 156.319 87.4472 156.007 87.4607C155.805 87.4715 155.261 87.5321 154.982 87.326C154.616 87.0566 155.115 86.9731 155.662 86.8586C155.987 86.7912 158.458 86.5447 158.458 86.5447C158.685 85.824 159.952 80.3372 165.933 78.9255C165.933 78.9255 164.036 77.4679 160.587 77.4571H160.526Z" fill="url(#ff-lg-r2)"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="s1-h1">Your money.<br>Your goals.<br>Your plan.</div>
+            <div class="s1-sub">Answer three quick questions and we'll build a personalized financial guide around exactly where you are right now.</div>
+            <div class="s1-pills">
+              <span class="s1-pill">📚 Expert-curated content</span>
+              <span class="s1-pill">🤖 AI Coach</span>
+              <span class="s1-pill">🎯 Built for your goals</span>
+            </div>
+          </div>
+          <div>
+            <button class="btn-white" onclick="goTo(1)">Build My Plan</button>
+            <div class="time-note">⏱ Takes less than 60 seconds</div>
+          </div>
+        </div>
+
+        <!-- ── S2: Goal Selection ── -->
+        <div class="screen" id="s1">
+          <div class="prog-dots"><div class="prog-dot active"></div><div class="prog-dot"></div><div class="prog-dot"></div></div>
+          <div class="scr-header">
+            <button class="back-btn" onclick="goTo(0)">←</button>
+            <span class="step-lbl">Step 1 of 3</span>
+          </div>
+          <div class="s2-body">
+            <div class="scr-title">What's your biggest money focus right now?</div>
+            <div class="scr-sub">Pick one to start — you can always explore more later</div>
+            <div class="goals-grid">
+              <div class="goal-tile" onclick="pickGoal('debt', this)">
+                <div class="goal-icon">💳</div>
+                <div class="goal-lbl">Pay Down My Debt</div>
+              </div>
+              <div class="goal-tile" onclick="pickGoal('savings', this)">
+                <div class="goal-icon">🏦</div>
+                <div class="goal-lbl">Build My Savings</div>
+              </div>
+              <div class="goal-tile" onclick="pickGoal('home', this)">
+                <div class="goal-icon">🏠</div>
+                <div class="goal-lbl">Buy a Home</div>
+              </div>
+              <div class="goal-tile" onclick="pickGoal('college', this)">
+                <div class="goal-icon">🎓</div>
+                <div class="goal-lbl">Save for College</div>
+              </div>
+              <div class="goal-tile" onclick="pickGoal('retirement', this)">
+                <div class="goal-icon">🌅</div>
+                <div class="goal-lbl">Plan for Retirement</div>
+              </div>
+              <div class="goal-tile" onclick="pickGoal('wealth', this)">
+                <div class="goal-icon">📈</div>
+                <div class="goal-lbl">Grow My Wealth</div>
+              </div>
+              <div class="goal-tile" style="grid-column: 1 / -1;" onclick="pickGoal('notSure', this)">
+                <div class="goal-icon">🧭</div>
+                <div class="goal-lbl">Not sure where to start</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── S3: Follow-up Questions ── -->
+        <div class="screen" id="s2">
+          <div class="prog-dots"><div class="prog-dot active"></div><div class="prog-dot active"></div><div class="prog-dot"></div></div>
+          <div class="scr-header">
+            <button class="back-btn" onclick="goTo(1)">←</button>
+            <span class="step-lbl">Step 2 of 3</span>
+          </div>
+          <div class="s3-body">
+            <div class="scr-title" id="s3-title">Great choice! Two quick questions:</div>
+            <div class="scr-sub" id="s3-sub">This helps us show you what's most useful — no judgment.</div>
+            <div class="q-block">
+              <div class="q-lbl" id="q1-lbl"></div>
+              <div class="a-tiles" id="q1-tiles"></div>
+            </div>
+            <div class="q-block">
+              <div class="q-lbl" id="q2-lbl"></div>
+              <div class="a-tiles" id="q2-tiles"></div>
+            </div>
+            <button class="btn-blue" onclick="goTo(3)">See My Personalized Plan →</button>
+          </div>
+        </div>
+
+        <!-- ── S4: Emotional Mirror / Profile Match ── -->
+        <div class="screen" id="s3">
+          <div class="prog-dots"><div class="prog-dot active"></div><div class="prog-dot active"></div><div class="prog-dot active"></div></div>
+          <div class="match-hero">
+            <div class="match-type-label">Your Profile Match</div>
+            <div class="match-avatar" id="m-avatar">🏠</div>
+            <div class="match-name"  id="m-name">The Home Buyer</div>
+            <div class="match-desc"  id="m-desc">You're actively planning your path to homeownership.</div>
+          </div>
+          <div class="match-body">
+            <div class="match-sec-title">Here's what we've lined up for you:</div>
+            <div id="m-sections"></div>
+            <button class="btn-blue" onclick="goTo(4)" style="margin-top:14px;">Go to My Plan →</button>
+          </div>
+        </div>
+
+        <!-- ── S5: Hub Home ── -->
+        <div class="screen hub" id="s4">
+          <div class="hub-header">
+            <div class="hub-greet">You're all set. Here's where to start. 👋</div>
+            <div class="hub-tag" id="hub-tag">Tailored for: The Home Buyer</div>
+            <div class="hub-chips">
+              <div class="hub-chip">📊 My Plan</div>
+              <div class="hub-chip">🤖 Ask Aimee</div>
+              <div class="hub-chip">🔖 Saved</div>
+            </div>
+          </div>
+          <div class="hub-body">
+            <div class="aimee-card">
+              <div class="aimee-av">🤖</div>
+              <div>
+                <div class="aimee-name">Meet Aimee, your AI financial coach</div>
+                <div class="aimee-msg" id="aimee-msg">Ready to talk through your plan? I can answer questions and help you stay on track.</div>
+              </div>
+            </div>
+            <div class="hub-sec-title">Your Top Picks</div>
+            <div id="hub-cards"></div>
+          </div>
+        </div>
+
+      </div><!-- /phone-screen -->
+
+    <!-- Annotations (visible on desktop) -->
+    <div class="ann-wrap" id="ann-wrap">
+      <!-- populated by JS per screen -->
+    </div>
+
+  </div><!-- /phone-wrap -->
+
+  <!-- Screen label -->
+  <div class="scr-label" id="scr-label">
+    <span class="scr-num">1</span>Welcome &amp; Value Prop
+  </div>
+
+  <!-- Goal → Profile mapping table -->
+  <div class="map-table-wrap">
+    <div class="map-title">Goal → Profile Matching Logic</div>
+    <div class="map-sub">Based on the Personalization System's 14 user profiles and Profile-Section Relevance Matrix</div>
+    <table>
+      <thead>
+        <tr><th>Goal</th><th>Matched Profile(s)</th><th>Top Content Sections (HIGH)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>💳 Pay Down My Debt</td><td>The Debt Battler, The Life Rebuilder</td><td>The Debt-Free Playbook · Boosting Your Credit Score · Build the Foundation</td></tr>
+        <tr><td>🏦 Build My Savings</td><td>The Fresh Start, The Single Parent</td><td>Build the Foundation · The Psychology of Money · When the Unexpected Happens</td></tr>
+        <tr><td>🏠 Buy a Home</td><td>The Home Buyer</td><td>Your Home, Your Biggest Asset · Boosting Your Credit Score · Build the Foundation</td></tr>
+        <tr><td>🎓 Save for College</td><td>The New Parent, The Mid-Career Juggler</td><td>Funding College Without the Stress · Life Changes, Money Changes · Tax Smart</td></tr>
+        <tr><td>🌅 Plan for Retirement</td><td>The Pre-Retiree, The Retiree</td><td>The Retirement Countdown · Making Retirement Income Last · Tax Smart</td></tr>
+        <tr><td>📈 Grow My Wealth</td><td>The Wealth Builder, The Benefits Maximizer</td><td>Make Your Money Work Harder · Know Your Benefits Inside &amp; Out · Tax Smart</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Three-principle footer cards -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px;">
+    <div style="background:white;border-radius:14px;padding:18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+      <div style="font-size:26px;margin-bottom:8px;">⚡</div>
+      <div style="font-size:13px;font-weight:700;color:#0d1f3c;margin-bottom:4px;">Quick Time to Value</div>
+      <div style="font-size:11px;color:#8898aa;">Meaningful wins within 2 minutes of sign-up</div>
+    </div>
+    <div style="background:white;border-radius:14px;padding:18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+      <div style="font-size:26px;margin-bottom:8px;">🧘</div>
+      <div style="font-size:13px;font-weight:700;color:#0d1f3c;margin-bottom:4px;">Avoid Overwhelm</div>
+      <div style="font-size:11px;color:#8898aa;">3 questions max with progressive disclosure</div>
+    </div>
+    <div style="background:white;border-radius:14px;padding:18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+      <div style="font-size:26px;margin-bottom:8px;">🎯</div>
+      <div style="font-size:13px;font-weight:700;color:#0d1f3c;margin-bottom:4px;">Crystal Clear Next Steps</div>
+      <div style="font-size:11px;color:#8898aa;">One primary CTA per screen, no decisions left unmade</div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+/* ─── Data ──────────────────────────────────────────────────── */
+const GOALS = {
+  debt: {
+    profile: 'The Debt Battler',
+    avatar: '💳',
+    desc: "You're ready to break the debt cycle for good. We've pulled together the most actionable, judgment-free guidance to help you make real progress — starting today.",
+    s3Title: "Tackling debt starts with knowing what you're dealing with. Two quick questions:",
+    s3Sub: "No judgment here — your answers are private and only used to focus your plan.",
+    hubTag: "Focused on your path to debt freedom",
+    q1Lbl: 'Which type of debt is weighing on you most?',
+    q1: [{i:'💳',t:'Credit card debt'},{i:'🏥',t:'Medical bills'},{i:'🎓',t:'Student loans'},{i:'📦',t:'A mix of everything'}],
+    q2Lbl: 'How would you describe your situation right now?',
+    q2: [{i:'🆘',t:'Crisis — I need help immediately'},{i:'😤',t:'Struggling but managing'},{i:'📋',t:'Making a plan to tackle it'}],
+    sections: [
+      {icon:'📕',bg:'#fef2f2',name:'The Debt-Free Playbook',cnt:'40 resources'},
+      {icon:'⭐',bg:'#fefce8',name:'Boosting Your Credit Score',cnt:'33 resources'},
+      {icon:'🏗️',bg:'#f0fdf4',name:'Build the Foundation: Budgeting & Saving',cnt:'40 resources'},
+    ],
+    aimee: "I can help you map out a debt payoff plan. Want to start with the avalanche or snowball method?",
+    content: [
+      [{type:'article',t:'Avalanche vs. Snowball: Which Strategy Wins for You?'},{type:'calculator',t:'Debt Payoff Timeline Calculator'},{type:'video',t:'Breaking the Debt Cycle for Good'}],
+      [{type:'article',t:'How to Dispute Errors on Your Credit Report'},{type:'tip',t:'Set up autopay — never miss a due date'},{type:'calculator',t:'Credit Score Recovery Estimator'}],
+      [{type:'article',t:'Build a $1,000 Emergency Cushion First'},{type:'tip',t:'Try the 50/30/20 budget — start here'},{type:'video',t:'Creating a Budget That Actually Sticks'}],
+    ]
+  },
+  savings: {
+    profile: 'The Fresh Start',
+    avatar: '🌱',
+    desc: "You're building your financial foundation from scratch. Your plan is packed with practical tools to help you create stability and start making real progress.",
+    s3Title: "Building from the ground up — two quick questions to point you in the right direction:",
+    s3Sub: "Your answers are private and only used to personalize your experience.",
+    hubTag: "Built around your savings goals",
+    q1Lbl: 'What life stage best describes you?',
+    q1: [
+      {i:'🎓',t:'Early career (20s)'},
+      {i:'📈',t:'Established & growing (30s–40s)'},
+      {i:'🌅',t:'Pre-retirement or retired (50s+)'},
+      {i:'👨‍👩‍👧',t:'Raising a family'},
+      {i:'👤',t:'Single, building on my own'},
+      {i:'🤝',t:'Partnered, planning ahead'},
+      {i:'🔄',t:'Starting over after a setback'},
+      {i:'💬',t:'Prefer not to say'},
+    ],
+    q2Lbl: 'What feels most urgent right now?',
+    q2: [{i:'🚨',t:'I have no emergency fund at all'},{i:'📉',t:'Living paycheck to paycheck'},{i:'🗺️',t:'I have some savings but no plan'}],
+    sections: [
+      {icon:'🏗️',bg:'#f0fdf4',name:'Build the Foundation: Budgeting & Saving',cnt:'40 resources'},
+      {icon:'🧠',bg:'#faf5ff',name:'The Psychology of Money',cnt:'40 resources'},
+      {icon:'⛑️',bg:'#eff6ff',name:'When the Unexpected Happens',cnt:'27 resources'},
+    ],
+    aimee: "Let's build your first emergency fund together. Even $500 changes everything. Where would you like to start?",
+    content: [
+      [{type:'article',t:'The 3-Step Emergency Fund Formula'},{type:'calculator',t:'Emergency Fund Goal Calculator'},{type:'video',t:'Why Your First $1,000 Changes Everything'}],
+      [{type:'article',t:'Why You Overspend (And How to Stop)'},{type:'tip',t:'Name your savings goals — it works'},{type:'video',t:'The Behavior Behind Every Budget'}],
+      [{type:'article',t:'Build Your Financial Safety Net Fast'},{type:'tip',t:'Move your emergency fund to a high-yield savings account'},{type:'calculator',t:'Savings Growth Projector'}],
+    ]
+  },
+  home: {
+    profile: 'The Home Buyer',
+    avatar: '🏠',
+    desc: "You're actively planning your path to homeownership. We've pulled together everything you need — from credit prep to closing day — to help you get there with confidence.",
+    s3Title: "Buying a home is a big move. Two quick questions to sharpen your plan:",
+    s3Sub: "Your answers are private and only used to build your plan.",
+    hubTag: "Personalized for your homebuying timeline",
+    q1Lbl: 'When are you thinking of buying?',
+    q1: [{i:'🔥',t:'Within the next 12 months'},{i:'📅',t:'In 1–3 years'},{i:'🔭',t:'Just exploring for now'}],
+    q2Lbl: "What feels like your biggest hurdle?",
+    q2: [{i:'💰',t:'Saving for a down payment'},{i:'📊',t:'Improving my credit score'},{i:'🗺️',t:'Understanding the process'},{i:'📈',t:'Finding the right mortgage'}],
+    sections: [
+      {icon:'🏡',bg:'#eff6ff',name:'Your Home, Your Biggest Asset',cnt:'40 resources'},
+      {icon:'⭐',bg:'#fefce8',name:'Boosting Your Credit Score',cnt:'33 resources'},
+      {icon:'🏗️',bg:'#f0fdf4',name:'Build the Foundation: Budgeting & Saving',cnt:'40 resources'},
+    ],
+    aimee: "Ready to talk through your homebuying plan? I can walk you through what to tackle first based on your timeline.",
+    content: [
+      [{type:'article',t:'How Much House Can You Actually Afford?'},{type:'calculator',t:'Mortgage Payment Calculator'},{type:'video',t:"First-Time Buyer's Complete Guide"}],
+      [{type:'article',t:'5 Fast Ways to Boost Your Credit Before You Apply'},{type:'tip',t:'Keep balances below 30% utilization'},{type:'calculator',t:'Credit Score Impact Estimator'}],
+      [{type:'article',t:'Build Your Down Payment Fund in 18 Months'},{type:'calculator',t:'Down Payment Savings Tracker'},{type:'tip',t:'Automate savings to a high-yield account'}],
+    ]
+  },
+  college: {
+    profile: 'The New Parent',
+    avatar: '🎓',
+    desc: "Funding education is one of the most meaningful investments you can make. Your plan is built to help you make every dollar you set aside count.",
+    s3Title: "College planning depends a lot on timing. Two quick questions:",
+    s3Sub: "Your answers are private and only used to personalize your experience.",
+    hubTag: "Tailored to your college savings timeline",
+    q1Lbl: 'How old are your children?',
+    q1: [{i:'👶',t:'Under 5 — just getting started'},{i:'🧒',t:'5–12 — building the habit'},{i:'🧑',t:'13–17 — crunch time'},{i:'🎓',t:'College-age — need it now'}],
+    q2Lbl: 'How much have you set aside so far?',
+    q2: [{i:'🌱',t:'Nothing yet — starting from zero'},{i:'📦',t:"A little, but not enough"},{i:'✅',t:'A solid start — want to optimize'}],
+    sections: [
+      {icon:'📚',bg:'#f0fdf4',name:'Funding College Without the Stress',cnt:'40 resources'},
+      {icon:'🔄',bg:'#faf5ff',name:'Life Changes, Money Changes',cnt:'40 resources'},
+      {icon:'💡',bg:'#fefce8',name:'Tax Smart: Keep More of What You Earn',cnt:'40 resources'},
+    ],
+    aimee: "A 529 plan might be your best friend here. Want me to walk you through how they work and which options fit your timeline?",
+    content: [
+      [{type:'article',t:'529 Plans: Everything You Need to Know'},{type:'calculator',t:'College Savings Goal Calculator'},{type:'video',t:'Understanding Financial Aid Basics'}],
+      [{type:'article',t:'Updating Your Insurance When Baby Arrives'},{type:'tip',t:'Review beneficiaries after every life event'},{type:'video',t:'Estate Planning for New Parents'}],
+      [{type:'article',t:'Dependent Care FSA: Are You Leaving Money?'},{type:'calculator',t:'Tax Savings with Dependent Care FSA'},{type:'tip',t:'Max your HSA — triple tax advantage'}],
+    ]
+  },
+  retirement: {
+    profile: 'The Pre-Retiree',
+    avatar: '🌅',
+    desc: "You're in the critical window for retirement planning. Your plan focuses on getting your numbers right, understanding your options, and building something you can actually retire on.",
+    s3Title: "The closer you get, the more specific this gets. Two quick questions:",
+    s3Sub: "Your answers are private and only used to build your plan.",
+    hubTag: "Built around your retirement timeline",
+    q1Lbl: 'How far are you from retirement?',
+    q1: [{i:'🏃',t:'Within the next 5 years'},{i:'📅',t:'5–10 years away'},{i:'🌱',t:'More than 10 years out'}],
+    q2Lbl: 'What concerns you most?',
+    q2: [{i:'⏱️',t:"Whether I've saved enough"},{i:'🏥',t:'Healthcare costs before Medicare'},{i:'📊',t:'Social Security timing'},{i:'💸',t:'Making my income last in retirement'}],
+    sections: [
+      {icon:'⏰',bg:'#eff6ff',name:'The Retirement Countdown',cnt:'40 resources'},
+      {icon:'💵',bg:'#f0fdf4',name:'Making Retirement Income Last',cnt:'40 resources'},
+      {icon:'💡',bg:'#fefce8',name:'Tax Smart: Keep More of What You Earn',cnt:'40 resources'},
+    ],
+    aimee: "Let's figure out your retirement number together. I can help you run Social Security timing scenarios and income projections.",
+    content: [
+      [{type:'article',t:'The 5-Year Pre-Retirement Checklist'},{type:'calculator',t:'Retirement Readiness Calculator'},{type:'video',t:'When Should You Claim Social Security?'}],
+      [{type:'article',t:'The 4% Rule — Does It Still Work?'},{type:'calculator',t:'Retirement Income Projector'},{type:'tip',t:'Sequence-of-returns risk: what it means for you'}],
+      [{type:'article',t:'Roth Conversion Strategy Before 65'},{type:'tip',t:'Catch-up contributions after 50 — use them'},{type:'calculator',t:'Roth vs. Traditional Comparison Tool'}],
+    ]
+  },
+  wealth: {
+    profile: 'The Wealth Builder',
+    avatar: '📈',
+    desc: "You're past survival mode and ready to build real wealth. Your plan surfaces high-impact strategies to accelerate progress and make every dollar work harder.",
+    s3Title: "Building wealth is about finding the right levers. Two quick questions:",
+    s3Sub: "Your answers are private and only used to focus your experience.",
+    hubTag: "Focused on growing what you've built",
+    q1Lbl: "What's your primary focus right now?",
+    q1: [{i:'🏠',t:'Real estate / investment property'},{i:'📊',t:'Investing and market growth'},{i:'🏢',t:'Business or side income'},{i:'🌿',t:'Early retirement'}],
+    q2Lbl: 'Which of these feels like a gap for you?',
+    q2: [{i:'💼',t:"Not maximizing my benefits"},{i:'🧾',t:'Paying too much in taxes'},{i:'💡',t:"Not sure where to invest next"}],
+    sections: [
+      {icon:'💪',bg:'#eff6ff',name:'Make Your Money Work Harder',cnt:'40 resources'},
+      {icon:'🎁',bg:'#f0fdf4',name:'Know Your Benefits Inside & Out',cnt:'40 resources'},
+      {icon:'💡',bg:'#fefce8',name:'Tax Smart: Keep More of What You Earn',cnt:'40 resources'},
+    ],
+    aimee: "You've built great financial habits. Let's talk about where your next investment dollar will have the most impact.",
+    content: [
+      [{type:'article',t:'Where to Invest After Maxing Your 401(k)'},{type:'calculator',t:'Investment Growth Projector'},{type:'video',t:'Building a Real Estate Portfolio'}],
+      [{type:'article',t:"Are You Leaving Employer Match on the Table?"},{type:'tip',t:'HSA is the ultimate retirement vehicle'},{type:'calculator',t:'Benefits Optimization Calculator'}],
+      [{type:'article',t:'Tax-Loss Harvesting: A Primer'},{type:'tip',t:'Move to tax-efficient funds in taxable accounts'},{type:'calculator',t:'Marginal Rate Estimator'}],
+    ]
+  },
+  notSure: {
+    profile: 'The Fresh Start',
+    avatar: '🧭',
+    desc: "Not knowing where to start is a great place to begin. We've built a foundation-first path designed for exactly this moment — practical, judgment-free, and built to move at your pace.",
+    s3Title: "Let's find your footing. Two quick questions:",
+    s3Sub: "Your answers are private and help us find the best place to start.",
+    hubTag: "Built around getting you started right",
+    q1Lbl: 'What area of your finances feels most uncertain?',
+    q1: [{i:'💸',t:'Day-to-day spending and saving'},{i:'💳',t:'Debt or credit'},{i:'📊',t:'Investing or growing my money'},{i:'🗺️',t:"I honestly have no idea"}],
+    q2Lbl: 'How would you describe where you are financially?',
+    q2: [{i:'🌱',t:'Starting from scratch'},{i:'🔄',t:'Starting over after a setback'},{i:'📋',t:'Doing okay but want to do better'}],
+    sections: [
+      {icon:'🏗️',bg:'#f0fdf4',name:'Build the Foundation: Budgeting & Saving',cnt:'40 resources'},
+      {icon:'🧠',bg:'#faf5ff',name:'The Psychology of Money',cnt:'40 resources'},
+      {icon:'⛑️',bg:'#eff6ff',name:'When the Unexpected Happens',cnt:'27 resources'},
+    ],
+    aimee: "Not knowing where to start is actually really common. Let's figure out the best first move together.",
+    content: [
+      [{type:'article',t:'The 3-Step Emergency Fund Formula'},{type:'calculator',t:'Emergency Fund Goal Calculator'},{type:'video',t:'Why Your First $1,000 Changes Everything'}],
+      [{type:'article',t:'Why You Overspend (And How to Stop)'},{type:'tip',t:'Name your savings goals — it works'},{type:'video',t:'The Behavior Behind Every Budget'}],
+      [{type:'article',t:'Build Your Financial Safety Net Fast'},{type:'tip',t:'Move your emergency fund to a high-yield savings account'},{type:'calculator',t:'Savings Growth Projector'}],
+    ]
+  }
+};
+
+const LABELS = [
+  '1|Welcome & Value Prop',
+  '2|Goal Selection',
+  '3|Personalize (2 quick questions)',
+  '4|Your Personalized Match',
+  '5|Hub Home — Value Delivered'
+];
+
+const ANNS = [
+  [{top:140,txt:'<strong>Hook in 3 seconds</strong>Clear headline answers "what is this for me?" immediately.'},{top:360,txt:'<strong>Social proof pills</strong>1,700+ resources + AI coach signals immediate value.'}],
+  [{top:130,txt:'<strong>Goal-first flow</strong>Goals before demographics — users self-select their own journey.'},{top:380,txt:'<strong>6 relatable tiles</strong>From the Core Principles deck — all mapped to real profiles.'}],
+  [{top:130,txt:'<strong>2 questions only</strong>Avoids overwhelm. Tile-based answers = zero keyboard friction.'},{top:430,txt:'<strong>Warm language</strong>"No judgment" reduces drop-off for sensitive topics like debt.'}],
+  [{top:100,txt:'<strong>Emotional mirror</strong>Profile name + empathetic description creates a "that\'s me!" moment.'},{top:360,txt:'<strong>Curated sections</strong>HIGH-rated matches from the Profile-Section Matrix shown upfront.'}],
+  [{top:90,txt:'<strong>Meet Aimee</strong>AI coach intro from the Implementation slide — contextual first message.'},{top:380,txt:'<strong>Value delivered</strong>"Wow" moment: real, personalized content within 60 seconds of signup.'}]
+];
+
+let current = 0;
+let activeGoal = 'home';
+
+function goTo(n) {
+  const screens = document.querySelectorAll('.screen');
+  const dots    = document.querySelectorAll('.dot');
+  const prev    = current;
+
+  // Always update nav + labels
+  dots.forEach((d,i) => d.classList.toggle('active', i===n));
+  const [num, lbl] = LABELS[n].split('|');
+  document.getElementById('scr-label').innerHTML = `<span class="scr-num">${num}</span>${lbl}`;
+  const aw = document.getElementById('ann-wrap');
+  aw.innerHTML = '';
+  ANNS[n].forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'ann';
+    el.style.marginTop = a.top + 'px';
+    el.innerHTML = a.txt;
+    aw.appendChild(el);
+  });
+
+  current = n;
+  if (n === prev) return;
+
+  const forward  = n > prev;
+  const outgoing = screens[prev];
+  const incoming = screens[n];
+  const ANIM     = ['slide-in-right','slide-in-left','slide-out-left','slide-out-right'];
+
+  // Clear any in-flight animation classes
+  screens.forEach(s => s.classList.remove('active', ...ANIM));
+
+  // Start both animations simultaneously
+  outgoing.classList.add(forward ? 'slide-out-left'  : 'slide-out-right');
+  incoming.classList.add(forward ? 'slide-in-right'  : 'slide-in-left');
+
+  // After animation ends, settle the incoming screen as active
+  setTimeout(() => {
+    screens.forEach(s => s.classList.remove(...ANIM));
+    incoming.classList.add('active');
+  }, 320);
+}
+
+function pickGoal(goal, tile) {
+  activeGoal = goal;
+  document.querySelectorAll('.goal-tile').forEach(t => t.classList.remove('sel'));
+  tile.classList.add('sel');
+  populate(goal);
+  goTo(2);
+}
+
+function populate(goal) {
+  const d = GOALS[goal];
+
+  // S3
+  document.getElementById('s3-title').textContent = d.s3Title;
+  document.getElementById('s3-sub').textContent = d.s3Sub;
+  document.getElementById('q1-lbl').textContent = d.q1Lbl;
+  document.getElementById('q2-lbl').textContent = d.q2Lbl;
+  document.getElementById('q1-tiles').innerHTML = d.q1.map(a =>
+    `<div class="a-tile" onclick="pickA(this,'q1')"><span class="a-icon">${a.i}</span>${a.t}</div>`).join('');
+  document.getElementById('q2-tiles').innerHTML = d.q2.map(a =>
+    `<div class="a-tile" onclick="pickA(this,'q2')"><span class="a-icon">${a.i}</span>${a.t}</div>`).join('');
+
+  // S4
+  document.getElementById('m-avatar').textContent = d.avatar;
+  document.getElementById('m-name').textContent = d.profile;
+  document.getElementById('m-desc').textContent = d.desc;
+  document.getElementById('m-sections').innerHTML = d.sections.map(s => `
+    <div class="sec-card">
+      <div class="sec-icon" style="background:${s.bg}">${s.icon}</div>
+      <div>
+        <div class="sec-name">${s.name}</div>
+        <div class="sec-cnt">${s.cnt}</div>
+      </div>
+      <div class="badge-high">HIGH</div>
+    </div>`).join('');
+
+  // S5
+  document.getElementById('hub-tag').textContent = d.hubTag;
+  document.getElementById('aimee-msg').textContent = d.aimee;
+  document.getElementById('hub-cards').innerHTML = d.sections.map((s,i) => `
+    <div class="hub-card">
+      <div class="hub-card-header">
+        <div class="hub-card-icon" style="background:${s.bg}">${s.icon}</div>
+        <div>
+          <div class="hub-card-name">${s.name}</div>
+          <div class="hub-card-sub">${s.cnt}</div>
+        </div>
+      </div>
+      <div class="c-items">
+        ${d.content[i].map(c => `
+          <div class="c-item">
+            <span class="c-badge c-${c.type}">${c.type}</span>
+            <span class="c-title">${c.t}</span>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function pickA(el, grp) {
+  el.closest('.a-tiles').querySelectorAll('.a-tile').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// init default
+populate('home');
+goTo(0);
+</script>
+</body>
+</html>
