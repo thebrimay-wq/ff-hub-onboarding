@@ -203,6 +203,27 @@
     .a-tile.sel { background: #00507C; color: white; }
     .a-icon { font-size: 18px; }
 
+    /* ── "Something else" reveal input ── */
+    .other-wrap {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height .25s ease, opacity .2s ease;
+    }
+    .other-wrap.open {
+      max-height: 70px;
+      opacity: 1;
+    }
+    .other-input {
+      width: 100%; margin-top: 6px;
+      padding: 12px 14px;
+      border: 1.5px solid #1284AF; border-radius: 10px;
+      font-family: 'Inter', sans-serif; font-size: 13px; color: #383838;
+      background: white; outline: none;
+    }
+    .other-input:focus { border-color: #005291; box-shadow: 0 0 0 3px rgba(0,82,145,.1); }
+    .other-input::placeholder { color: #928B9F; }
+
     /* ── Buttons ── */
     .btn-blue {
       width: 100%; background: #063853;
@@ -624,7 +645,7 @@ const GOALS = {
     s3Sub: "No judgment here — your answers are private and only used to focus your plan.",
     hubTag: "Focused on your path to debt freedom",
     q1Lbl: 'Which type of debt is weighing on you most?',
-    q1: [{i:'💳',t:'Credit card debt'},{i:'🏥',t:'Medical bills'},{i:'🎓',t:'Student loans'},{i:'📦',t:'A mix of everything'}],
+    q1: [{i:'💳',t:'Credit card debt'},{i:'🏥',t:'Medical bills'},{i:'🎓',t:'Student loans'},{i:'📦',t:'A mix of everything'},{i:'✏️',t:'Something else',other:true}],
     q2Lbl: 'How would you describe your situation right now?',
     q2: [{i:'🆘',t:'Crisis — I need help immediately'},{i:'😤',t:'Struggling but managing'},{i:'📋',t:'Making a plan to tackle it'}],
     sections: [
@@ -864,8 +885,16 @@ function populate(goal) {
   document.getElementById('s3-sub').textContent = d.s3Sub;
   document.getElementById('q1-lbl').textContent = d.q1Lbl;
   document.getElementById('q2-lbl').textContent = d.q2Lbl;
-  document.getElementById('q1-tiles').innerHTML = d.q1.map(a =>
-    `<div class="a-tile" onclick="pickA(this,'q1')"><span class="a-icon">${a.i}</span>${a.t}</div>`).join('');
+  const q1Tiles = d.q1.map(a =>
+    a.other
+      ? `<div class="a-tile" onclick="pickOther(this,'q1')"><span class="a-icon">${a.i}</span>${a.t}</div>`
+      : `<div class="a-tile" onclick="pickA(this,'q1')"><span class="a-icon">${a.i}</span>${a.t}</div>`
+  ).join('');
+  const q1Other = d.q1.some(a => a.other)
+    ? `<div class="other-wrap" id="q1-other-wrap"><input class="other-input" id="q1-other-input" type="text" placeholder="What type of debt is on your mind?" /></div>`
+    : '';
+  document.getElementById('q1-tiles').innerHTML = q1Tiles + q1Other;
+
   document.getElementById('q2-tiles').innerHTML = d.q2.map(a =>
     `<div class="a-tile" onclick="pickA(this,'q2')"><span class="a-icon">${a.i}</span>${a.t}</div>`).join('');
 
@@ -908,6 +937,19 @@ function populate(goal) {
 function pickA(el, grp) {
   el.closest('.a-tiles').querySelectorAll('.a-tile').forEach(t => t.classList.remove('sel'));
   el.classList.add('sel');
+  // collapse any open "other" input in this group
+  const wrap = document.getElementById(grp + '-other-wrap');
+  if (wrap) wrap.classList.remove('open');
+}
+
+function pickOther(el, grp) {
+  el.closest('.a-tiles').querySelectorAll('.a-tile').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  const wrap = document.getElementById(grp + '-other-wrap');
+  if (wrap) {
+    wrap.classList.add('open');
+    setTimeout(() => document.getElementById(grp + '-other-input')?.focus(), 50);
+  }
 }
 
 // init default
